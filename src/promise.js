@@ -53,30 +53,31 @@ var createContext = Context.create;
 var debug = require("./debuggability")(Promise, Context);
 var CapturedTrace = debug.CapturedTrace;
 var PassThroughHandlerContext =
-    require("./finally")(Promise, tryConvertToPromise);
+    require("./finally")(Promise, tryConvertToPromise, NEXT_FILTER);
 var catchFilter = require("./catch_filter")(NEXT_FILTER);
 var nodebackForPromise = require("./nodeback");
 var errorObj = util.errorObj;
 var tryCatch = util.tryCatch;
 function check(self, executor) {
+    if (self == null || self.constructor !== Promise) {
+        throw new TypeError(CONSTRUCT_ERROR_INVOCATION);
+    }
     if (typeof executor !== "function") {
         throw new TypeError(FUNCTION_ERROR + util.classString(executor));
     }
-    if (self.constructor !== Promise) {
-        throw new TypeError(CONSTRUCT_ERROR_INVOCATION);
-    }
+
 }
 
 function Promise(executor) {
+    if (executor !== INTERNAL) {
+        check(this, executor);
+    }
     this._bitField = NO_STATE;
     this._fulfillmentHandler0 = undefined;
     this._rejectionHandler0 = undefined;
     this._promise0 = undefined;
     this._receiver0 = undefined;
-    if (executor !== INTERNAL) {
-        check(this, executor);
-        this._resolveFromExecutor(executor);
-    }
+    this._resolveFromExecutor(executor);
     this._promiseCreated();
     this._fireEvent("promiseCreated", this);
 }
@@ -95,7 +96,8 @@ Promise.prototype.caught = Promise.prototype["catch"] = function (fn) {
             if (util.isObject(item)) {
                 catchInstances[j++] = item;
             } else {
-                return apiRejection(OBJECT_ERROR + util.classString(item));
+                return apiRejection("Catch statement predicate: " +
+                    OBJECT_ERROR + util.classString(item));
             }
         }
         catchInstances.length = j;
@@ -164,6 +166,8 @@ Promise.prototype.all = function () {
 Promise.prototype.error = function (fn) {
     return this.caught(util.originatesFromRejection, fn);
 };
+
+Promise.getNewLibraryCopy = module.exports;
 
 Promise.is = function (val) {
     return val instanceof Promise;
@@ -259,7 +263,8 @@ Promise.prototype._then = function (
 
         async.invoke(settler, target, {
             handler: domain === null ? handler
-                : (typeof handler === "function" && domain.bind(handler)),
+                : (typeof handler === "function" &&
+                    util.domainBind(domain, handler)),
             promise: promise,
             receiver: receiver,
             value: value
@@ -319,6 +324,10 @@ Promise.prototype._unsetCancelled = function() {
 Promise.prototype._setCancelled = function() {
     this._bitField = this._bitField | IS_CANCELLED;
     this._fireEvent("promiseCancelled", this);
+};
+
+Promise.prototype._setWillBeCancelled = function() {
+    this._bitField = this._bitField | WILL_BE_CANCELLED;
 };
 
 Promise.prototype._setAsyncGuaranteed = function() {
@@ -409,11 +418,11 @@ Promise.prototype._addCallbacks = function (
         this._receiver0 = receiver;
         if (typeof fulfill === "function") {
             this._fulfillmentHandler0 =
-                domain === null ? fulfill : domain.bind(fulfill);
+                domain === null ? fulfill : util.domainBind(domain, fulfill);
         }
         if (typeof reject === "function") {
             this._rejectionHandler0 =
-                domain === null ? reject : domain.bind(reject);
+                domain === null ? reject : util.domainBind(domain, reject);
         }
     } else {
         ASSERT(this[base + CALLBACK_PROMISE_OFFSET] === undefined);
@@ -425,11 +434,11 @@ Promise.prototype._addCallbacks = function (
         this[base + CALLBACK_RECEIVER_OFFSET] = receiver;
         if (typeof fulfill === "function") {
             this[base + CALLBACK_FULFILL_OFFSET] =
-                domain === null ? fulfill : domain.bind(fulfill);
+                domain === null ? fulfill : util.domainBind(domain, fulfill);
         }
         if (typeof reject === "function") {
             this[base + CALLBACK_REJECT_OFFSET] =
-                domain === null ? reject : domain.bind(reject);
+                domain === null ? reject : util.domainBind(domain, reject);
         }
     }
     this._setLength(index + 1);
@@ -496,6 +505,7 @@ function(reason, synchronous, ignoreNonErrorWarnings) {
 };
 
 Promise.prototype._resolveFromExecutor = function (executor) {
+    if (executor === INTERNAL) return;
     ASSERT(typeof executor === "function");
     var promise = this;
     this._captureStackTrace();
@@ -767,6 +777,7 @@ require("./cancel")(Promise, PromiseArray, apiRejection, debug);
 require("./direct_resolve")(Promise);
 require("./synchronous_inspection")(Promise);
 require("./join")(
-    Promise, PromiseArray, tryConvertToPromise, INTERNAL, debug);
+    Promise, PromiseArray, tryConvertToPromise, INTERNAL, async, getDomain);
 Promise.Promise = Promise;
+Promise.version = "__VERSION__";
 };

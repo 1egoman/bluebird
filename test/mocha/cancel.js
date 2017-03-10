@@ -281,7 +281,7 @@ describe("Cancellation", function() {
         });
     });
 
-    specify("Can be used for breaking chains early", function() {
+    specify("can be used for breaking chains early", function() {
         var called = false;
         var p = Promise.resolve(1)
             .then(function(data) {
@@ -709,7 +709,21 @@ describe("Cancellation", function() {
         req.cancel();
         var resolve;
         return new Promise(function(_, __, onCancel) {resolve = arguments[0]});
-    })
+    });
+
+    specify("isCancelled() synchronously returns true after calling cancel() on pending promise", function() {
+        var promise = new Promise(function () {});
+        promise.cancel();
+        assert(promise.isCancelled());
+    });
+
+    specify("isCancelled() synchronously returns true after calling cancel() on promise created from .then()", function() {
+        var promise = new Promise(function () {});
+        var thenPromise = promise.then();
+        thenPromise.cancel();
+        assert(thenPromise.isCancelled());
+    });
+
     specify("gh-166", function() {
         var f1 = false, f2 = false, f3 = false, f4 = false;
         var a = Promise.resolve();
@@ -750,6 +764,13 @@ describe("Cancellation", function() {
         var p = new Promise(function(_, __, onCancel) {resolve = arguments[0]});
         return p;
     });
+
+    specify("gh-1187", function() {
+        var a = Promise.delay(300).lastly(function() {});
+        a.cancel();
+        assert(a.isCancelled());
+        assert(!a.isCancellable());
+    })
 });
 
 describe("Cancellation with .all", function() {

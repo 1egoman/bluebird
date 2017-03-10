@@ -5,7 +5,6 @@ var testUtils = require("./helpers/util.js");
 var Promise2 = require("../../js/debug/promise.js")();
 
 var using = Promise.using;
-var delay = Promise.delay;
 var error = new Error("");
 var id = 0;
 function Resource() {
@@ -95,10 +94,6 @@ function connect() {
 
 function connect2() {
     return _connect2().disposer(Resource.prototype.close);
-}
-
-function connectCloseError() {
-    return _connect().disposer(Resource.prototype.closeError);
 }
 
 
@@ -436,5 +431,20 @@ describe("Promise.using", function() {
         return Promise.using([], function(results) {
             assert.deepEqual(results, []);
         });
+    })
+
+    specify("null disposer is called", function() {
+        var calls = 0;
+        var getNull = function() {
+            return Promise.resolve(null).disposer(function() {
+                calls++;
+            });
+        };
+
+        return Promise.using(getNull(), function() {
+            calls++;
+        }).then(function() {
+            assert.equal(2, calls);
+        })
     })
 })

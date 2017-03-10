@@ -11,6 +11,7 @@ function toResolutionValue(val) {
     switch(val) {
     case RESOLVE_ARRAY: return [];
     case RESOLVE_OBJECT: return {};
+    case RESOLVE_MAP: return new Map();
     }
     ASSERT(false);
 }
@@ -137,7 +138,7 @@ PromiseArray.prototype._resolve = function (value) {
 };
 
 PromiseArray.prototype._cancel = function() {
-    if (this._isResolved() || !this._promise.isCancellable()) return;
+    if (this._isResolved() || !this._promise._isCancellable()) return;
     this._values = null;
     this._promise._cancel();
 };
