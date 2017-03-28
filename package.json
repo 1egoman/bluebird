@@ -62,7 +62,7 @@
     "rx": "^4.1.0",
     "serve-static": "^1.7.1",
     "sinon": "~1.17.5",
-    "uglify-js": "~2.7.3",
+    "uglify-js": "~2.8.17",
     "kefir": "^3.4.0"
   },
   "readmeFilename": "README.md",
