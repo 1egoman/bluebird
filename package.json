@@ -40,7 +40,7 @@
     "url": "http://github.com/petkaantonov/"
   },
   "devDependencies": {
-    "acorn": "~3.3.0",
+    "acorn": "~4.0.12",
     "baconjs": "^0.7.43",
     "bluebird": "^3.4.1",
     "body-parser": "^1.10.2",
