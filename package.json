@@ -44,7 +44,7 @@
     "baconjs": "^0.7.43",
     "bluebird": "^3.4.1",
     "body-parser": "^1.10.2",
-    "browserify": "^13.1.0",
+    "browserify": "^14.3.0",
     "cli-table": "~0.3.1",
     "co": "^4.2.0",
     "cross-spawn": "^4.0.0",
