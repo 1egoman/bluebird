@@ -1,1 +1,17 @@
-version: v1
+#
+# Backstroke is a bot to sync changed from popular upstream repositories to their forks.
+#
+version: v3
+
+operations:
+  # Sync all changed from the upstream's master branch into the fork's master branch.
+  - name: Automatically update fork
+    type: sync_from_upstream
+    fork_branch: master
+    upstream_branch: master
+
+# If your Backstroke link fails to sync, how would you like to be notified?
+alerts:
+  - type: send_email
+    email: DEFAULT
+# - type: create_issue
