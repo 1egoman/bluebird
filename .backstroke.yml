@@ -3,7 +3,7 @@
 #
 version: v3
 
-operations:
+tasks:
   # Sync all changed from the upstream's master branch into the fork's master branch.
   - name: Automatically update fork
     type: sync_from_upstream
