@@ -9,6 +9,7 @@ tasks:
     type: sync_from_upstream
     fork_branch: master
     upstream_branch: master
+    something_else: test
 
 # If your Backstroke link fails to sync, how would you like to be notified?
 alerts:
